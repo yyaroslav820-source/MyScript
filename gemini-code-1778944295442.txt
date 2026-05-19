@@ -1,0 +1,67 @@
+{sh:
+load {iv}
+sed -i 's/\r//g' $0 && . $0 && exit
+
+# 1. Clear any old lists
+> ./output/audio_filter.txt
+> ./output/v_map.txt
+
+# 2. Build the exact filter steps using quick echo streams (No loop, no timeout)
+echo "ffconcat version 1.0" > ./output/v_map.txt
+
+echo "[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.3846[a0];
+[0:a]asetrate=44100*2^(7/12),atrim=0:duration=0.3846[a1];
+[0:a]asetrate=44100*2^(8/12),atrim=0:duration=0.3846[a2];
+[0:a]asetrate=44100*2^(2/12),atrim=0:duration=0.1923[a3];
+[0:a]asetrate=44100*2^(4/12),atrim=0:duration=0.1923[a4];
+[0:a]asetrate=44100*2^(9/12),atrim=0:duration=0.1923[a5];
+[0:a]asetrate=44100*2^(2/12),atrim=0:duration=0.1923[a6];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.1923[a7];
+[0:a]asetrate=44100*2^(4/12),atrim=0:duration=0.1923[a8];
+[0:a]asetrate=44100*2^(1/12),atrim=0:duration=0.5769[a9];
+[0:a]asetrate=44100*2^(-1/12),atrim=0:duration=0.28845[a10];
+[0:a]asetrate=44100*2^(1/12),atrim=0:duration=0.1923[a11];
+[0:a]asetrate=44100*2^(4/12),atrim=0:duration=0.1923[a12];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.1923[a13];
+[0:a]asetrate=44100*2^(1/12),atrim=0:duration=0.1923[a14];
+[0:a]asetrate=44100*2^(-3/12),atrim=0:duration=0.1923[a15];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.1923[a16];
+[0:a]asetrate=44100*2^(-3/12),atrim=0:duration=0.3846[a17];
+[0:a]asetrate=44100*2^(8/12),atrim=0:duration=0.1923[a18];
+[0:a]asetrate=44100*2^(-6/12),atrim=0:duration=0.1923[a19];
+[0:a]asetrate=44100*2^(-8/12),atrim=0:duration=0.1923[a20];
+[0:a]asetrate=44100*2^(-6/12),atrim=0:duration=0.7692[a21];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.3846[a22];
+[0:a]asetrate=44100*2^(1/12),atrim=0:duration=0.3846[a23];
+[0:a]asetrate=44100*2^(2/10),atrim=0:duration=0.3846[a24];
+[0:a]asetrate=44100*2^(7/12),atrim=0:duration=0.1923[a25];
+[0:a]asetrate=44100*2^(7/12),atrim=0:duration=0.1923[a26];
+[0:a]asetrate=44100*2^(9/12),atrim=0:duration=0.1923[a27];
+[0:a]asetrate=44100*2^(5/50),atrim=0:duration=0.1923[a28];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.1923[a29];
+[0:a]asetrate=44100*2^(4/12),atrim=0:duration=0.1923[a30];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.5769[a31];
+[0:a]asetrate=44100*2^(6/14),atrim=0:duration=0.3846[a32];
+[0:a]asetrate=44100*2^(9/12),atrim=0:duration=0.1923[a33];
+[0:a]asetrate=44100*2^(7/12),atrim=0:duration=0.1923[a34];
+[0:a]asetrate=44100*2^(3/12),atrim=0:duration=0.1923[a35];
+[0:a]asetrate=44100*2^(2/12),atrim=0:duration=0.28845[a36];
+[0:a]asetrate=44100*2^(2/12),atrim=0:duration=0.28845[a37];
+[0:a]asetrate=44100*2^(6/12),atrim=0:duration=0.1923[a38];
+[0:a]asetrate=44100*2^(2/16),atrim=0:duration=0.9615[a39];
+[a0][a1][a2][a3][a4][a5][a6][a7][a8][a9][a10][a11][a12][a13][a14][a15][a16][a17][a18][a19][a20][a21][a22][a23][a24][a25][a26][a27][a28][a29][a30][a31][a32][a33][a34][a35][a36][a37][a38][a39]concat=n=40:v=0:a=1[out]" > ./output/audio_filter.txt
+
+# 3. Create the direct video map instructions
+for d in 0.3846 0.3846 0.3846 0.1923 0.1923 0.1923 0.1923 0.1923 0.1923 0.5769 0.28845 0.1923 0.1923 0.1923 0.1923 0.1923 0.1923 0.3846 0.1923 0.1923 0.1923 0.7692 0.3846 0.3846 0.3846 0.1923 0.1923 0.1923 0.1923 0.1923 0.1923 0.5769 0.3846 0.1923 0.1923 0.1923 0.28845 0.28845 0.1923 0.9615; do
+    echo -e "file 'input.mp4'\nduration $d" >> ./output/v_map.txt
+done
+
+# 4. Set up local copy references for fast internal reading
+cp $FILE_1 ./output/input.mp4
+
+# 5. Process audio structure via fast text file execution mapping
+ffmpeg -i ./output/input.mp4 -filter_complex_script ./output/audio_filter.txt -map "[out]" -b:a 192k ./output/final_audio.wav -y
+
+# 6. Stream mux video timeline cuts with calculated audio
+ffmpeg -f concat -safe 0 -i ./output/v_map.txt -i ./output/final_audio.wav -map 0:v -map 1:a -c:v copy ./output/yaroslav_final_video.mp4 -y
+}
