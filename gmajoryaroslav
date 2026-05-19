@@ -1,3 +1,3 @@
 {sh:
 load {iv}
-ffmpeg -i $FILE_1 -filter_complex "[0:v]hflip,stereo3d=sbsl:ml[left]; [0:v]hflip,stereo3d=sbsr:mr[right]; [right][left]hstack,scale=iw/8:ih:flags=neighbor,scale=854:480:flags=neighbor,hue=h='mod(trunc(n/6)*60,360)'" -c:a copy ./output/gmajoryaro1.mp4}
+ffmpeg -i $FILE_1 -filter_complex "[0:v]hflip,stereo3d=sbsl:ml[left]; [0:v]hflip,stereo3d=sbsr:mr[right]; [right][left]hstack,scale=iw/8:ih:flags=neighbor,scale=854:480:flags=neighbor,hue=h='mod(trunc(n/6)*60,360)',hflip,vflip,eq=brightness=0.3:contrast=1.2[vout]; [0:a]atempo=1.2,asetrate=48000*1.2[aout]" -map "[vout]" -map "[aout]" -c:v libx264 -crf 18 -preset ultrafast -c:a aac -b:a 192k ./output/yaro_preview2800.mp4}
