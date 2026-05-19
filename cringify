@@ -1,0 +1,3 @@
+{sh:
+load {iv}
+ffmpeg -i $FILE_1 -vf "rotate=t*{arg:1},hue=s=sin(t*{arg:2}*-5)*2" -af "rubberband=pitch={arg:3}" ./output/ffmpeg.mp4}
